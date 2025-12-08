@@ -1,0 +1,61 @@
+{
+    "permissions": [
+        {
+            "configure": ".*",
+            "read": ".*",
+            "user": "guest",
+            "vhost": "/",
+            "write": ".*"
+        },
+        {
+            "configure": "test-exchange\\.\\w*|test-exchange-3\\.\\w*|test-exchange-3",
+            "read": "test-exchange|test-exchange\\.\\w.*|test-exchange-3|test-exchange-3\\.\\w.*",
+            "user": "guest2",
+            "vhost": "/",
+            "write": "test-exchange|test-exchange\\.\\w.*|test-exchange-3|test-exchange-3\\.\\w.*"
+        }
+    ],
+    "bindings": [],
+    "queues": [],
+    "parameters": [],
+    "policies": [],
+    "rabbitmq_version": "4.2.1",
+    "rabbit_version": "4.2.1",
+    "exchanges": [],
+    "vhosts": [
+        {
+            "limits": [],
+            "metadata": {
+                "description": "Default virtual host",
+                "tags": [],
+                "default_queue_type": "classic"
+            },
+            "name": "/"
+        }
+    ],
+    "users": [
+        {
+            "hashing_algorithm": "rabbit_password_hashing_sha256",
+            "limits": {},
+            "name": "guest",
+            "password_hash": "LzA8uEF2TYeMtmxczECa40VAIOdZmg08i6R+L4XEeg9b62Br",
+            "tags": [
+                "administrator"
+            ]
+        },
+        {
+            "hashing_algorithm": "rabbit_password_hashing_sha256",
+            "limits": {},
+            "name": "guest2",
+            "password_hash": "nV8dlnyFAnteKsCYrrHUPmuNo7rmxLEgOkKXf8WHNW4Nt0GS",
+            "tags": []
+        }
+    ],
+    "global_parameters": [
+        {
+            "name": "cluster_tags",
+            "value": []
+        }
+    ],
+    "topic_permissions": []
+}

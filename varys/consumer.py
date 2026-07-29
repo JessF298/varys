@@ -1,10 +1,11 @@
 import functools
-import pika
-from pika import exceptions as pika_exceptions
 import time
 
-from varys.utils import varys_message
+import pika
+from pika import exceptions as pika_exceptions
+
 from varys.process import Process
+from varys.utils import varys_message
 
 
 class Consumer(Process):
@@ -62,6 +63,42 @@ class Consumer(Process):
                 requeue=requeue,
             )
         )
+
+    def check_exchange_and_queue(self) -> dict:
+        """
+        Check if exchange exists and queue exists bound to the given exchange.
+        Closes connection after checks.
+
+        Returns:
+            bool: True if exchange exists, false if not.
+        Raises:
+            ChannelClosed: if error not 404 but channel closed for other reason.
+        """
+        result = {}
+        self._connection = pika.BlockingConnection(self._parameters)
+        self._channel = self._connection.channel()
+        try:
+            self._channel.exchange_declare(
+                exchange=self._exchange,
+                passive=True,
+            )
+            result[self._exchange] = True
+        except pika_exceptions.ChannelClosed as e:
+            if e.reply_code != 404:
+                raise
+            else:
+                result[self._exchange] = False
+
+        try:
+            self._channel.queue_declare(queue=self._queue, passive=True)
+            result[self._queue] = True
+        except pika_exceptions.ChannelClosed as e:
+            if e.reply_code != 404:
+                raise
+            else:
+                result[self._queue] = False
+        self.stop()  # close connection
+        return result
 
     def run(self):
         while not self._stopping:

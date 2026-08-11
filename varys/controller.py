@@ -1,5 +1,5 @@
-import queue
 import os
+import queue
 import time
 
 from varys.consumer import Consumer
@@ -110,6 +110,7 @@ class Varys:
         self,
         exchange,
         queue_suffix="",
+        block=True,
         timeout=None,
         exchange_type="fanout",
         prefetch_count=5,
@@ -142,7 +143,7 @@ class Varys:
 
         try:
             message = self._in_channels[exchange]._message_queue.get(
-                block=True, timeout=timeout
+                block=block, timeout=timeout
             )
             if self.auto_ack:
                 # Only ack a message when it is pulled out of the thread-safe queue and auto_ack is set
@@ -219,16 +220,12 @@ class Varys:
             try:
                 channel.stop()
             except Exception:
-                channel._log.exception(
-                    "Failed to cleanly stop channel, closing anyway"
-                )
+                channel._log.exception("Failed to cleanly stop channel, closing anyway")
             channel.join()
 
         for channel in self._out_channels.values():
             try:
                 channel.stop()
             except Exception:
-                channel._log.exception(
-                    "Failed to cleanly stop channel, closing anyway"
-                )
+                channel._log.exception("Failed to cleanly stop channel, closing anyway")
             channel.join()

@@ -180,6 +180,50 @@ class Varys:
                 break
 
         return messages
+    
+    def try_receive(
+        self,
+        exchange: str, 
+        queue_suffix: str
+    ) -> dict:
+        """
+        Try to receive messages on a given queue bound to supplied exchange. 
+        Returns a dict with boolean result for existence of exchange and queue 
+        bound to that exchange.
+
+        Does not store Consumer instance. 
+
+        args:
+            exchange: name of exchange to check.
+            queue_suffix: name of queue suffix to check bound to provided 
+            exchange.
+        """
+        if not self._in_channels.get(exchange):
+            if not queue_suffix:
+                raise Exception(
+                    "Must provide a queue suffix when checking queue for first time."
+                )
+        
+            temp_consumer = Consumer(
+                message_queue=queue.Queue(),
+                routing_key=self.routing_key,
+                exchange=exchange,
+                configuration=self._credentials,
+                log_file=self._logfile,
+                log_level=self._log_level,
+                queue_suffix=queue_suffix,
+                exchange_type="fanout",  # this isn't needed for the check
+                prefetch_count=0, # Not used as no messaged received
+                reconnect_wait=10
+                )
+            temp_consumer.start()
+            time.sleep(0.3)
+
+            result =  temp_consumer._check_exchange()
+        else:
+            result = self._in_channels[exchange]._check_exchange()
+        
+        return result
 
     def acknowledge_message(self, message):
         """

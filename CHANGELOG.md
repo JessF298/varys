@@ -3,5 +3,7 @@
 # v1.3.0
 
 ## Added:
-- check_exchange_and_queue method added to consumer.
-- `block` is available as arg on received but defaults to True. 
+- _check_exchange method added to consumer and check_receive method added to controller as entry point.
+
+## Changed:
+- `block` is made available as arg on received but defaults to True (to match docs).

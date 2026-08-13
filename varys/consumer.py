@@ -70,8 +70,8 @@ class Consumer(Process):
         Closes connection after checks.
 
         Returns:
-            dict: exchange and queue as key, bool for their existence on 
-            configured rmq server. 
+            dict: exchange and queue as key, bool for their existence on
+            configured rmq server.
         Raises:
             ChannelClosed: if error not 404 but channel closed for other reason.
         """
@@ -90,7 +90,10 @@ class Consumer(Process):
             if e.reply_code != 404:
                 raise
             else:
+                # If exchange doesn't exist, queue doesn't either, return early.
                 result[self._exchange] = False
+                result[self._queue] = False
+                return result
 
         try:
             self._channel.queue_declare(queue=self._queue, passive=True)

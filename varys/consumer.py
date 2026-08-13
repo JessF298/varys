@@ -64,19 +64,22 @@ class Consumer(Process):
             )
         )
 
-    def check_exchange_and_queue(self) -> dict:
+    def _check_exchange(self) -> dict:
         """
         Check if exchange exists and queue exists bound to the given exchange.
         Closes connection after checks.
 
         Returns:
-            bool: True if exchange exists, false if not.
+            dict: exchange and queue as key, bool for their existence on 
+            configured rmq server. 
         Raises:
             ChannelClosed: if error not 404 but channel closed for other reason.
         """
         result = {}
-        self._connection = pika.BlockingConnection(self._parameters)
-        self._channel = self._connection.channel()
+        if not self._connection:
+            self._connection = pika.BlockingConnection(self._parameters)
+        if not self._channel:
+            self._channel = self._connection.channel()
         try:
             self._channel.exchange_declare(
                 exchange=self._exchange,

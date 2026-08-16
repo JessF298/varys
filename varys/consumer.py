@@ -5,7 +5,7 @@ import pika
 from pika import exceptions as pika_exceptions
 
 from varys.process import Process
-from varys.utils import varys_message
+from varys.utils import VarysException, varys_message
 
 
 class Consumer(Process):
@@ -21,6 +21,7 @@ class Consumer(Process):
         prefetch_count,
         routing_key="arbitrary_string",
         reconnect_wait=10,
+        auto_create=True,
     ):
         super().__init__(
             message_queue,
@@ -36,6 +37,7 @@ class Consumer(Process):
 
         self._closing = False
         self._prefetch_count = prefetch_count
+        self._auto_create = auto_create
 
     def _on_message(self, _unused_channel, basic_deliver, properties, body):
         message = varys_message(basic_deliver, properties, body)
@@ -123,9 +125,17 @@ class Consumer(Process):
                         passive=True,
                     )
                 except pika_exceptions.ChannelClosed as e:
+                    # Server returns 404 if exchange does not exist.
+                    # If any other error, raise.
                     if e.reply_code != 404:
                         raise
+                    if not self._auto_create:
+                        raise VarysException(
+                            "Exchange %s does not exist, and auto_create set to False.",
+                            self._exchange,
+                        ) from e
 
+                    # Create the queue
                     self._log.info(
                         f"Exchange {self._exchange} does not exist, creating it..."
                     )
@@ -135,6 +145,7 @@ class Consumer(Process):
                         exchange_type=self._exchange_type,
                         durable=True,
                     )
+
                 try:
                     self._channel.queue_declare(
                         queue=self._queue, durable=True, passive=True
@@ -142,7 +153,13 @@ class Consumer(Process):
                 except pika_exceptions.ChannelClosed as e:
                     if e.reply_code != 404:
                         raise
+                    if not self._auto_create:
+                        raise VarysException(
+                            "Queue %s does not exist, and auto_create set to False.",
+                            self._queue,
+                        ) from e
 
+                    # Make the queue if it does not exist
                     self._log.info(
                         f"Queue {self._queue} does not exist, creating it..."
                     )
